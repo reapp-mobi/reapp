@@ -6,6 +6,7 @@ import { LoggerModule } from 'nestjs-pino'
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter'
 import { ConfigModule } from './config/config.module'
 import { ConfigService } from './config/config.service'
+import { AdminModule } from './modules/admin/admin.module'
 import { AccountModule } from './modules/account/account.module'
 import { AuthenticationModule } from './modules/auth/auth.module'
 import { DonationModule } from './modules/donation/donation.module'
@@ -54,6 +55,7 @@ import { ReportModule } from './modules/report/report.module'
       },
     }),
     ConfigModule,
+    AdminModule,
     AccountModule,
     AuthenticationModule,
     DonationModule,
