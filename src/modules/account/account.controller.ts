@@ -14,6 +14,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
+import { Throttle } from '@nestjs/throttler'
 import { Account } from '@prisma/client'
 import { Request } from 'express'
 import { AuthGuard } from '../auth/auth.guard'
@@ -33,6 +34,8 @@ import { UpdateAccountDto } from './dto/update-account.dto'
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
 
+  // Registration: long-window cap to curb automated account farming.
+  @Throttle({ default: { limit: 5, ttl: 3_600_000 } })
   @Post()
   @UseInterceptors(FileInterceptor('media'))
   create(
@@ -42,6 +45,7 @@ export class AccountController {
     return this.accountService.create(createAccountDto, media)
   }
 
+  @Throttle({ default: { limit: 5, ttl: 3_600_000 } })
   @Post('google')
   createWithGoogle(@Body() createAccountGoogleDto: CreateAccountGoogleDto) {
     return this.accountService.createWithGoogle(createAccountGoogleDto)
@@ -126,6 +130,8 @@ export class AccountController {
     return this.accountService.update(user, +id, body, media)
   }
 
+  // Reset-password uses the recovery token; cap retries like other auth flows.
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('reset-password')
   resetPassword(@Body() body: ResetPasswordDto) {
     return this.accountService.resetPassword(body)
