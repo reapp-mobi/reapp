@@ -1,4 +1,3 @@
-import { paginationSchema } from '@app/common/schemas/pagination.schema'
 import { ZodValidationPipe } from '@app/common/zod.validation.pipe'
 import {
   Body,
@@ -13,8 +12,6 @@ import {
 import { Post } from '@nestjs/common'
 import { Request } from 'express'
 import { AuthGuard } from '../auth/auth.guard'
-import { Roles } from '../auth/docorators/roles.decorator'
-import { Role } from '../auth/enums/role.enum'
 import { DonationService } from './donation.service'
 import {
   DonationRequestBody,
@@ -42,13 +39,6 @@ export class DonationController {
       requestDonationDto,
       Number(accountId),
     )
-  }
-
-  @UseGuards(AuthGuard)
-  @Roles(Role.Admin)
-  @Get('all')
-  findAll(@Query(new ZodValidationPipe(paginationSchema)) { offset, limit }) {
-    return this.donationService.getAllDonations(offset, limit)
   }
 
   @UseGuards(AuthGuard)

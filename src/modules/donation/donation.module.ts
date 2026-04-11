@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common'
-import { DonationService } from './donation.service'
-import { DonationController } from './donation.controller'
+import { JwtModule } from '@nestjs/jwt'
 import { PrismaService } from '../..//database/prisma.service'
 import { MercadopagoService } from '../../services/mercadopago/mercadopago.service'
-import { JwtModule } from '@nestjs/jwt'
+import { DonationController } from './donation.controller'
+import { DonationService } from './donation.service'
 
 @Module({
   imports: [
@@ -14,5 +14,6 @@ import { JwtModule } from '@nestjs/jwt'
   ],
   providers: [DonationService, PrismaService, MercadopagoService],
   controllers: [DonationController],
+  exports: [DonationService],
 })
 export class DonationModule {}
