@@ -6,6 +6,7 @@ import { BackendErrorCodes } from '@app/types/errors'
 import { ReappException } from '@app/utils/error.utils'
 import { Request } from 'express'
 import { ConfigService } from '../../config/config.service'
+import { PrismaService } from '../../database/prisma.service'
 import { ROLES_KEY } from './docorators/roles.decorator'
 import { Role } from './enums/role.enum'
 
@@ -15,6 +16,7 @@ export class AuthGuard implements CanActivate {
     private reflector: Reflector,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private prismaService: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -26,21 +28,36 @@ export class AuthGuard implements CanActivate {
       throw new ReappException(BackendErrorCodes.INVALID_TOKEN_ERROR)
     }
 
+    let accountId: number
     try {
       const payload = this.jwtService.verify(token, {
         secret: this.configService.JWT_SECRET,
       })
-      request['user'] = payload.user
+      accountId = payload.sub
     } catch {
       throw new ReappException(BackendErrorCodes.INVALID_TOKEN_ERROR)
     }
+
+    if (!accountId) {
+      throw new ReappException(BackendErrorCodes.INVALID_TOKEN_ERROR)
+    }
+
+    request['user'] = { id: accountId }
 
     if (!roles) {
       return true
     }
 
-    const userRoles = request['user'].accountType as Role[]
-    const hasRole = () => roles.some((role) => userRoles.includes(role))
+    const account = await this.prismaService.account.findUnique({
+      where: { id: accountId },
+      select: { accountType: true },
+    })
+
+    if (!account) {
+      throw new ReappException(BackendErrorCodes.INVALID_TOKEN_ERROR)
+    }
+
+    const hasRole = () => roles.some((role) => account.accountType === role)
     if (!hasRole()) {
       throw new ReappException(BackendErrorCodes.USER_NOT_AUTHORIZED_ERROR)
     }
