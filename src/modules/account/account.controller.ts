@@ -17,16 +17,12 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import { Account } from '@prisma/client'
 import { Request } from 'express'
 import { AuthGuard } from '../auth/auth.guard'
-import { Roles } from '../auth/docorators/roles.decorator'
-import { Role } from '../auth/enums/role.enum'
 import { AccountService } from './account.service'
 import {
   CreateAccountDto,
   CreateAccountGoogleDto,
 } from './dto/create-account.dto'
-import { GetAccountsQuery } from './dto/get-account-query.dto'
 import { ResetPasswordDto } from './dto/reset-password.dto'
-import { UpdateAccountStatusDto } from './dto/update-account-dto'
 import { UpdateAccountDto } from './dto/update-account.dto'
 
 @Controller('account')
@@ -50,13 +46,6 @@ export class AccountController {
   @Get('categories')
   findAllCategories() {
     return this.accountService.findAllCategories()
-  }
-
-  @UseGuards(AuthGuard)
-  @Roles(Role.Admin)
-  @Get()
-  findAll(@Query() query: GetAccountsQuery) {
-    return this.accountService.findAll(query)
   }
 
   @UseGuards(AuthGuard)
@@ -129,13 +118,6 @@ export class AccountController {
   @Post('reset-password')
   resetPassword(@Body() body: ResetPasswordDto) {
     return this.accountService.resetPassword(body)
-  }
-
-  @UseGuards(AuthGuard)
-  @Roles(Role.Admin)
-  @Patch(':id/status')
-  updateStatus(@Param('id') id: number, @Body() body: UpdateAccountStatusDto) {
-    return this.accountService.updateStatus(+id, body.status)
   }
 
   @UseGuards(AuthGuard)

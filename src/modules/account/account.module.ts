@@ -19,5 +19,6 @@ import { MediaService } from '../media-attachment/media-attachment.service'
   ],
   controllers: [AccountController],
   providers: [AccountService, PrismaService, AuthGuard, MediaService],
+  exports: [AccountService],
 })
 export class AccountModule {}
