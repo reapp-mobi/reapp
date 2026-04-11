@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt'
 import { BackendErrorCodes } from '@app/types/errors'
 import { ReappException } from '@app/utils/error.utils'
 import { Request } from 'express'
+import { ConfigService } from '../../config/config.service'
 import { ROLES_KEY } from './docorators/roles.decorator'
 import { Role } from './enums/role.enum'
 
@@ -13,6 +14,7 @@ export class AuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -26,7 +28,7 @@ export class AuthGuard implements CanActivate {
 
     try {
       const payload = this.jwtService.verify(token, {
-        secret: process.env.JWT_SECRET,
+        secret: this.configService.JWT_SECRET,
       })
       request['user'] = payload.user
     } catch {

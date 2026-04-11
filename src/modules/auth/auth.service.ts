@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import * as PrismaClient from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
@@ -6,6 +6,7 @@ import * as bcrypt from 'bcryptjs'
 import { BackendErrorCodes } from '@app/types/errors'
 import { ReappException } from '@app/utils/error.utils'
 import { OAuth2Client } from 'google-auth-library'
+import { ConfigService } from '../../config/config.service'
 import { PrismaService } from '../../database/prisma.service'
 import { LoginDto } from './dto/login.dto'
 import { LoginGoogleDto } from './dto/loginGoogle.dto'
@@ -28,21 +29,14 @@ export class AuthService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {
-    this.client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+    this.client = new OAuth2Client(this.configService.GOOGLE_CLIENT_ID)
   }
 
   private async generateJwtToken(
     user: Partial<PrismaClient.Account>,
   ): Promise<string> {
-    const jwtSecretKey = process.env.JWT_SECRET
-    if (!jwtSecretKey) {
-      throw new HttpException(
-        'Ocorreu um erro ao autenticar o usuário',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      )
-    }
-
     const payload = {
       id: user.id,
       email: user.email,
@@ -52,7 +46,10 @@ export class AuthService {
 
     return this.jwtService.sign(
       { user: payload },
-      { secret: jwtSecretKey, expiresIn: '7d' },
+      {
+        secret: this.configService.JWT_SECRET,
+        expiresIn: this.configService.JWT_EXPIRES_IN,
+      },
     )
   }
 

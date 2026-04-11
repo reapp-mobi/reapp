@@ -5,8 +5,17 @@ import { Queue } from 'bull'
 import * as mime from 'mime-types'
 import sharp from 'sharp'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ConfigService } from '../../../config/config.service'
 import { PrismaService } from '../../../database/prisma.service'
 import { MediaService } from '../media-attachment.service'
+
+const TEST_BASE_URL = 'http://test.local'
+const TEST_UPLOAD_DIR = '/tmp/test-uploads'
+
+const mockConfigService = {
+  BASE_URL: TEST_BASE_URL,
+  UPLOAD_DIR: TEST_UPLOAD_DIR,
+}
 
 vi.mock('node:fs', () => ({
   mkdirSync: vi.fn(),
@@ -65,6 +74,10 @@ describe('MediaService', () => {
           useValue: {
             add: vi.fn(),
           },
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
         },
       ],
     }).compile()
@@ -409,7 +422,7 @@ describe('MediaService', () => {
 
       const result = await service.getMediaAttachmentById('mock-uuid')
 
-      const baseUrl = `${process.env.BASE_URL}/uploads/mock-uuid`
+      const baseUrl = `${TEST_BASE_URL}/uploads/mock-uuid`
 
       expect(prismaService.mediaAttachment.findUnique).toHaveBeenCalledWith({
         where: { id: 'mock-uuid' },

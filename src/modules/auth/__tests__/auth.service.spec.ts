@@ -4,6 +4,7 @@ import { Account } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 import { OAuth2Client } from 'google-auth-library'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ConfigService } from '../../../config/config.service'
 import { PrismaService } from '../../../database/prisma.service'
 import { BackendErrorCodes } from '../../../types/errors'
 import { ReappException } from '../../../utils/error.utils'
@@ -30,19 +31,23 @@ const mockOAuth2Client = {
   verifyIdToken: vi.fn(),
 }
 
+const mockConfigService = {
+  JWT_SECRET: 'test_secret',
+  JWT_EXPIRES_IN: '7d',
+  GOOGLE_CLIENT_ID: 'test_google_client_id',
+}
+
 describe('AuthService', () => {
   let authService: AuthService
 
   beforeEach(async () => {
-    process.env.JWT_SECRET = 'test_secret'
-    process.env.GOOGLE_CLIENT_ID = 'test_google_client_id'
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: OAuth2Client, useValue: mockOAuth2Client },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile()
 

@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ConfigService } from '../../config/config.service'
 import { MercadopagoService } from './mercadopago.service'
+
+const mockConfigService = {
+  MERCADOPAGO_ACCESS_TOKEN: 'test_access_token',
+}
 
 const createMock = vi.fn()
 const getMock = vi.fn()
@@ -26,7 +31,10 @@ describe('MercadopagoService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [MercadopagoService],
+      providers: [
+        MercadopagoService,
+        { provide: ConfigService, useValue: mockConfigService },
+      ],
     }).compile()
 
     service = module.get<MercadopagoService>(MercadopagoService)

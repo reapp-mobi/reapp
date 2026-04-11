@@ -5,14 +5,15 @@ import {
   PreferenceRequest,
   PreferenceResponse,
 } from 'mercadopago/dist/clients/preference/commonTypes'
+import { ConfigService } from '../../config/config.service'
 
 @Injectable()
 export class MercadopagoService {
   private readonly client: MercadoPagoConfig
 
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
     this.client = new MercadoPagoConfig({
-      accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
+      accessToken: this.configService.MERCADOPAGO_ACCESS_TOKEN,
     })
   }
 

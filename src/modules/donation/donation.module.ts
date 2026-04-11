@@ -1,15 +1,21 @@
 import { Module } from '@nestjs/common'
-import { DonationService } from './donation.service'
-import { DonationController } from './donation.controller'
+import { JwtModule } from '@nestjs/jwt'
+import { ConfigModule } from '../../config/config.module'
+import { ConfigService } from '../../config/config.service'
 import { PrismaService } from '../..//database/prisma.service'
 import { MercadopagoService } from '../../services/mercadopago/mercadopago.service'
-import { JwtModule } from '@nestjs/jwt'
+import { DonationController } from './donation.controller'
+import { DonationService } from './donation.service'
 
 @Module({
   imports: [
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '7d' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.JWT_SECRET,
+        signOptions: { expiresIn: configService.JWT_EXPIRES_IN },
+      }),
     }),
   ],
   providers: [DonationService, PrismaService, MercadopagoService],

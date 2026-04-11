@@ -7,12 +7,7 @@ import { ConfigService } from './config.service'
   imports: [
     NestConfigModule.forRoot({
       isGlobal: true,
-      load: [
-        () => ({
-          ...process.env,
-          ...ConfigSchema.parse(process.env),
-        }),
-      ],
+      load: [() => ConfigSchema.parse(process.env)],
     }),
   ],
   providers: [ConfigService],

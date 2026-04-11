@@ -12,6 +12,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 import * as bcrypt from 'bcryptjs'
 import { OAuth2Client } from 'google-auth-library'
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
+import { ConfigService } from '../../config/config.service'
 import { PrismaService } from '../../database/prisma.service'
 import { MediaService } from '../media-attachment/media-attachment.service'
 import {
@@ -70,9 +71,10 @@ export class AccountService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly mediaService: MediaService,
+    private readonly configService: ConfigService,
     @InjectPinoLogger(AccountService.name) private readonly logger: PinoLogger,
   ) {
-    this.client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+    this.client = new OAuth2Client(this.configService.GOOGLE_CLIENT_ID)
   }
 
   private async createInstitution(

@@ -1,8 +1,20 @@
-name: CI - Run Tests on Develop
+name: CI - Run Tests
 on:
   pull_request:
     branches:
       - main
+    paths:
+      - "src/**"
+      - "prisma/**"
+      - "seeds/**"
+      - "scripts/**"
+      - "test/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "nest-cli.json"
+      - "tsconfig*.json"
+      - "vitest.config*.ts"
+      - ".github/workflows/run-tests.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -11,6 +23,7 @@ concurrency:
 jobs:
   tests:
     runs-on: ubuntu-22.04
+    timeout-minutes: 15
     env:
       DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db?connection_limit=1
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -19,9 +32,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "20.16.0"
+          node-version: "22.16.0"
           cache: "pnpm"
-      - run: pnpm install
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Cache Prisma artifacts
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/prisma
+          key: ${{ runner.os }}-prisma-${{ hashFiles('pnpm-lock.yaml', 'prisma/schema.prisma') }}
+      - run: pnpm install --frozen-lockfile --prefer-offline
       - run: pnpm db:generate
-      - run: pnpm test
+      - run: pnpm test:ci
