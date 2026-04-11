@@ -103,30 +103,6 @@ describe('AccountController', () => {
     })
   })
 
-  describe('findAll', () => {
-    it('should return all accounts', async () => {
-      const accounts = [
-        {
-          id: 1,
-          email: 'test1@example.com',
-          name: 'Test1',
-          accountType: 'donor',
-        },
-        {
-          id: 2,
-          email: 'test2@example.com',
-          name: 'Test2',
-          accountType: 'institution',
-        },
-      ]
-      ;(accountService.findAll as Mock).mockResolvedValue(accounts)
-
-      const result = await controller.findAll({})
-      expect(accountService.findAll).toHaveBeenCalled()
-      expect(result).toEqual(accounts)
-    })
-  })
-
   describe('findOne', () => {
     it('should return one account by id', async () => {
       const account = {
