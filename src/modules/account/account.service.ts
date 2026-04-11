@@ -1,14 +1,7 @@
 import { BackendErrorCodes } from '@app/types/errors'
 import { ReappException } from '@app/utils/error.utils'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
-import {
-  Account,
-  AccountStatus,
-  AccountType,
-  Institution,
-  Prisma,
-} from '@prisma/client'
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
+import { AccountStatus, AccountType, Prisma } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 import { OAuth2Client } from 'google-auth-library'
 import { InjectPinoLogger, PinoLogger } from 'nestjs-pino'
@@ -571,17 +564,30 @@ export class AccountService {
   }
 
   async update(
-    currentAccount: Account,
+    currentAccountId: number,
     accountId: number,
     updateAccountDto: UpdateAccountDto,
     media?: Express.Multer.File,
   ) {
+    const currentAccount = await this.prismaService.account.findUnique({
+      where: { id: currentAccountId },
+      select: { accountType: true },
+    })
+
+    if (!currentAccount) {
+      this.logger.warn(
+        { requesterId: currentAccountId },
+        'update: requisitante não encontrado',
+      )
+      throw new ReappException(BackendErrorCodes.USER_NOT_AUTHORIZED_ERROR)
+    }
+
     if (
-      currentAccount.id !== accountId &&
+      currentAccountId !== accountId &&
       currentAccount.accountType !== AccountType.ADMIN
     ) {
       this.logger.warn(
-        { requesterId: currentAccount.id, targetId: accountId },
+        { requesterId: currentAccountId, targetId: accountId },
         'update: acesso não autorizado',
       )
       throw new ReappException(BackendErrorCodes.USER_NOT_AUTHORIZED_ERROR)
