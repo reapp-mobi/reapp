@@ -22,19 +22,12 @@ concurrency:
 
 jobs:
   tests:
-    strategy:
-      fail-fast: false
-      matrix:
-        shard:
-          - 1/2
-          - 2/2
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     env:
       DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db?connection_limit=1
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       MERCADOPAGO_NOTIFICATION_URL: http://test.reapp/donation/notify
-      VITEST_SHARD: ${{ matrix.shard }}
 
     steps:
       - uses: actions/checkout@v4
