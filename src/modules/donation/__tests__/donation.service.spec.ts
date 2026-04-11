@@ -1,11 +1,18 @@
 import { HttpException } from '@nestjs/common'
 import { Test, TestingModule } from '@nestjs/testing'
+import { Mock, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ConfigService } from '../../../config/config.service'
 import { PrismaService } from '../../../database/prisma.service'
 import { MercadopagoService } from '../../../services/mercadopago/mercadopago.service'
 import { DonationService } from '../donation.service'
 import { NotificationRequestDto } from '../dto/notification.dto'
 import { DonationRequestBody } from '../dto/request-donation.dto'
-import { Mock, beforeEach, describe, expect, it, vi } from 'vitest'
+
+const TEST_NOTIFICATION_URL = 'https://test.local/donation/notify'
+
+const mockConfigService = {
+  MERCADOPAGO_NOTIFICATION_URL: TEST_NOTIFICATION_URL,
+}
 
 describe('DonationService tests', () => {
   let service: DonationService
@@ -41,6 +48,10 @@ describe('DonationService tests', () => {
               aggregate: vi.fn(),
             },
           },
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
         },
       ],
     }).compile()
@@ -179,7 +190,7 @@ describe('DonationService tests', () => {
         external_reference: expect.stringMatching(
           /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
         ),
-        notification_url: process.env.MERCADOPAGO_NOTIFICATION_URL,
+        notification_url: TEST_NOTIFICATION_URL,
       })
     })
 
@@ -222,7 +233,7 @@ describe('DonationService tests', () => {
         external_reference: expect.stringMatching(
           /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
         ),
-        notification_url: process.env.MERCADOPAGO_NOTIFICATION_URL,
+        notification_url: TEST_NOTIFICATION_URL,
       })
     })
 
@@ -261,7 +272,7 @@ describe('DonationService tests', () => {
         external_reference: expect.stringMatching(
           /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
         ),
-        notification_url: process.env.MERCADOPAGO_NOTIFICATION_URL,
+        notification_url: TEST_NOTIFICATION_URL,
       })
     })
   })

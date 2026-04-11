@@ -17,7 +17,8 @@ import * as sharp from 'sharp'
 import { v4 as uuidv4 } from 'uuid'
 import { PrismaService } from '../../database/prisma.service'
 
-import { Prisma, PrismaClient } from '@prisma/client'
+import { Prisma } from '@prisma/client'
+import { ConfigService } from '../../config/config.service'
 import {
   AUDIO_MIME_TYPES,
   MAX_IMAGE_SIZE,
@@ -59,14 +60,18 @@ type UploadOptions = {
 
 @Injectable()
 export class MediaService {
-  private readonly uploadsDir =
-    process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads')
+  private readonly uploadsDir: string
+  private readonly baseUploadsUrl: string
   private readonly tempUploadsDir = path.join(process.cwd(), 'temp_uploads')
 
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly configService: ConfigService,
     @InjectQueue('media-processing') private mediaQueue: Queue,
-  ) {}
+  ) {
+    this.uploadsDir = this.configService.UPLOAD_DIR
+    this.baseUploadsUrl = `${this.configService.BASE_URL}/uploads`
+  }
 
   private validateMediaFile(file: Express.Multer.File) {
     if (!file || !file.mimetype) {
@@ -240,7 +245,7 @@ export class MediaService {
 
     const fileMeta = await this.createMediaMetadata(file, focus, fileType)
 
-    const uploadBaseUrl = `${process.env.BASE_URL}/uploads`
+    const uploadBaseUrl = this.baseUploadsUrl
     const mediaUploadUrl = `${uploadBaseUrl}/${mediaId}/`
     const mediaUrl = `${mediaUploadUrl}/${originalFileName}`
 
@@ -487,7 +492,7 @@ export class MediaService {
       },
     })
 
-    const baseUrl = `${process.env.BASE_URL}/uploads`
+    const baseUrl = this.baseUploadsUrl
 
     const mediaAttachmentMap = new Map<string, any>()
     mediaAttachments.forEach((mediaAttachment) => {
@@ -546,7 +551,7 @@ export class MediaService {
       return { mediaResponse: null, processing: null }
     }
 
-    const baseUrl = `${process.env.BASE_URL}/uploads`
+    const baseUrl = this.baseUploadsUrl
     const processing = mediaAttachment.processing
 
     const isProcessed = processing === 2

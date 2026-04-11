@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing'
 import { Account, AccountType } from '@prisma/client'
 import { Prisma } from '@prisma/client'
+import { ConfigService } from '../../../config/config.service'
 import { PrismaService } from '../../../database/prisma.service'
 import { MediaService } from '../../media-attachment/media-attachment.service'
 import { AccountService } from '../account.service'
@@ -67,6 +68,10 @@ describe('AccountService', () => {
     verifyIdToken: vi.fn(),
   }
 
+  const mockConfigService = {
+    GOOGLE_CLIENT_ID: 'test_google_client_id',
+  }
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -78,6 +83,10 @@ describe('AccountService', () => {
         {
           provide: MediaService,
           useValue: mockMediaService,
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
         },
         { provide: 'PinoLogger:AccountService', useValue: mockLogger },
       ],

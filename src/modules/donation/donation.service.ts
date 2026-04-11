@@ -6,6 +6,7 @@ import {
   PreferenceResponse,
 } from 'mercadopago/dist/clients/preference/commonTypes'
 import { v4 as uuidv4 } from 'uuid'
+import { ConfigService } from '../../config/config.service'
 import { PrismaService } from '../..//database/prisma.service'
 import { MercadopagoService } from '../..//services/mercadopago/mercadopago.service'
 import { NotificationRequestDto } from './dto/notification.dto'
@@ -26,6 +27,7 @@ export class DonationService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly mercadopagoService: MercadopagoService,
+    private readonly configService: ConfigService,
   ) {}
 
   private buildRequestBody(
@@ -48,9 +50,7 @@ export class DonationService {
         email: bodyInfo.email,
       },
       external_reference: uuidv4(),
-      notification_url:
-        process.env.MERCADOPAGO_NOTIFICATION_URL ||
-        'https://exemploAplicacao.com/donation/notify',
+      notification_url: this.configService.MERCADOPAGO_NOTIFICATION_URL,
     }
   }
 

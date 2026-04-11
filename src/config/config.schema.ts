@@ -1,3 +1,4 @@
+import * as path from 'node:path'
 import { z } from 'zod'
 
 const envEnum = z
@@ -18,6 +19,8 @@ export const ConfigSchema = z.object({
   // Server
   PORT: z.coerce.number().default(3000),
   HOST: z.string().default('localhost'),
+  BASE_URL: z.string().url(),
+  UPLOAD_DIR: z.string().default(path.join(process.cwd(), 'uploads')),
 
   // Database
   DATABASE_URL: z.string().min(1),
@@ -29,7 +32,7 @@ export const ConfigSchema = z.object({
   // Redis
   REDIS_HOST: z.string().min(1).default('redis'),
   REDIS_PORT: z.coerce.number().default(6379),
-  REDIS_PASSWORD: z.string(),
+  REDIS_PASSWORD: z.string().default(''),
 
   // Email
   EMAIL_HOST: z.string().min(1),
@@ -38,7 +41,11 @@ export const ConfigSchema = z.object({
   EMAIL_PASSWORD: z.string().min(1),
   EMAIL_FROM: z.string().min(1),
 
+  // Google OAuth
+  GOOGLE_CLIENT_ID: z.string().min(1),
+
   // MercadoPago
+  MERCADOPAGO_ACCESS_TOKEN: z.string().min(1),
   MERCADOPAGO_NOTIFICATION_URL: z.string().min(1),
 
   IS_TESTING_ENV: z.coerce.boolean().default(false),

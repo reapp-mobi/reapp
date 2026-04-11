@@ -22,6 +22,7 @@ import { ReportModule } from './modules/report/report.module'
 
 @Module({
   imports: [
+    ConfigModule,
     ThrottlerModule.forRoot({
       throttlers: [
         {
@@ -30,30 +31,37 @@ import { ReportModule } from './modules/report/report.module'
         },
       ],
     }),
-    BullModule.forRoot({
-      redis: {
-        host: process.env.REDIS_HOST,
-        port: parseInt(process.env.REDIS_PORT),
-        password: process.env.REDIS_PASSWORD,
-      },
-    }),
-    LoggerModule.forRoot({
-      pinoHttp: {
-        level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-        base: {
-          pid: false,
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        redis: {
+          host: configService.REDIS_HOST,
+          port: configService.REDIS_PORT,
+          password: configService.REDIS_PASSWORD || undefined,
         },
-        transport: {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'HH:MM:ss Z',
-            ignore: 'pid,hostname',
+      }),
+    }),
+    LoggerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        pinoHttp: {
+          level: configService.isProduction ? 'info' : 'debug',
+          base: {
+            pid: false,
+          },
+          transport: {
+            target: 'pino-pretty',
+            options: {
+              colorize: true,
+              translateTime: 'HH:MM:ss Z',
+              ignore: 'pid,hostname',
+            },
           },
         },
-      },
+      }),
     }),
-    ConfigModule,
     AccountModule,
     AuthenticationModule,
     DonationModule,
@@ -69,7 +77,6 @@ import { ReportModule } from './modules/report/report.module'
   ],
   providers: [
     MailService,
-    ConfigService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
