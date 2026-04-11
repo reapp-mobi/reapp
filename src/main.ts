@@ -36,7 +36,9 @@ async function bootstrap() {
     credentials: true,
   })
 
-  // Static files
+  // Helmet must run before static serving so uploads inherit its headers.
+  app.use(helmet())
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -70,8 +72,24 @@ async function bootstrap() {
         `Verified: Directory exists at '${resolvedUploadsPath}'.`,
         'Bootstrap',
       )
-      // Serve static files
-      app.use(`/${uploadsDirectoryName}`, express.static(resolvedUploadsPath))
+      // Serve static files. Harden against stored-XSS via uploaded HTML/SVG:
+      //  - nosniff prevents MIME confusion
+      //  - a restrictive CSP stops inline scripts from executing
+      //  - dotfiles:deny blocks hidden files, index:false disables listing
+      app.use(
+        `/${uploadsDirectoryName}`,
+        express.static(resolvedUploadsPath, {
+          dotfiles: 'deny',
+          index: false,
+          setHeaders: (res) => {
+            res.setHeader('X-Content-Type-Options', 'nosniff')
+            res.setHeader(
+              'Content-Security-Policy',
+              "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'; sandbox",
+            )
+          },
+        }),
+      )
       appLogger.log(
         `Successfully configured static serving for '/${uploadsDirectoryName}'. Access files at /${uploadsDirectoryName}/<filename>`,
         'Bootstrap',
@@ -89,9 +107,6 @@ async function bootstrap() {
     )
   }
   // --- End Static files ---
-
-  // -- Helmet config ---
-  app.use(helmet())
 
   await app.listen(configService.PORT)
 }

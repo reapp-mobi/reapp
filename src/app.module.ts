@@ -24,12 +24,9 @@ import { ReportModule } from './modules/report/report.module'
   imports: [
     ConfigModule,
     ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60000,
-          limit: 30,
-        },
-      ],
+      // Global default applied to every route. Sensitive endpoints override
+      // this with stricter limits via @Throttle() on the controller method.
+      throttlers: [{ name: 'default', ttl: 60_000, limit: 30 }],
     }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
