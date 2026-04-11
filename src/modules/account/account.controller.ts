@@ -15,7 +15,6 @@ import {
 } from '@nestjs/common'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { Throttle } from '@nestjs/throttler'
-import { Account } from '@prisma/client'
 import { Request } from 'express'
 import { AuthGuard } from '../auth/auth.guard'
 import { Roles } from '../auth/docorators/roles.decorator'
@@ -92,6 +91,13 @@ export class AccountController {
   }
 
   @UseGuards(AuthGuard)
+  @Get('me')
+  me(@Req() request: Request) {
+    const userId = request.user.id
+    return this.accountService.findOne(userId)
+  }
+
+  @UseGuards(AuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.accountService.findOne(+id)
@@ -126,8 +132,7 @@ export class AccountController {
     @Param('id') id: number,
     @UploadedFile() media: Express.Multer.File,
   ) {
-    const user = request.user as Account
-    return this.accountService.update(user, +id, body, media)
+    return this.accountService.update(request.user.id, +id, body, media)
   }
 
   // Reset-password uses the recovery token; cap retries like other auth flows.
