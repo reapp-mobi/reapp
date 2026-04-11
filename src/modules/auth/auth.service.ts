@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import * as PrismaClient from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 
 import { BackendErrorCodes } from '@app/types/errors'
@@ -10,17 +9,6 @@ import { ConfigService } from '../../config/config.service'
 import { PrismaService } from '../../database/prisma.service'
 import { LoginDto } from './dto/login.dto'
 import { LoginGoogleDto } from './dto/loginGoogle.dto'
-
-const authResponseFields = {
-  id: true,
-  email: true,
-  name: true,
-  media: true,
-  accountType: true,
-  followingCount: true,
-  followersCount: true,
-  note: true,
-}
 
 @Injectable()
 export class AuthService {
@@ -34,18 +22,9 @@ export class AuthService {
     this.client = new OAuth2Client(this.configService.GOOGLE_CLIENT_ID)
   }
 
-  private async generateJwtToken(
-    user: Partial<PrismaClient.Account>,
-  ): Promise<string> {
-    const payload = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      accountType: user.accountType,
-    }
-
+  private async generateJwtToken(accountId: number): Promise<string> {
     return this.jwtService.sign(
-      { user: payload },
+      { sub: accountId },
       {
         secret: this.configService.JWT_SECRET,
         expiresIn: this.configService.JWT_EXPIRES_IN,
@@ -56,37 +35,19 @@ export class AuthService {
   async validateUser(
     email: string,
     password: string,
-  ): Promise<Partial<PrismaClient.Account> | null> {
+  ): Promise<{ id: number; status: string } | null> {
     const user = await this.prismaService.account.findFirst({
       where: { email },
       select: {
         id: true,
-        email: true,
-        name: true,
-        media: true,
         status: true,
-        accountType: true,
-        followingCount: true,
-        followersCount: true,
-        note: true,
         passwordHash: true,
-        donor: {
-          select: {
-            id: true,
-          },
-        },
-        institution: {
-          select: {
-            id: true,
-          },
-        },
       },
     })
 
     if (user) {
-      const { passwordHash, ...result } = user
-      if (await bcrypt.compare(password, passwordHash)) {
-        return result
+      if (await bcrypt.compare(password, user.passwordHash)) {
+        return { id: user.id, status: user.status }
       }
     }
     return null
@@ -100,8 +61,8 @@ export class AuthService {
     if (user.status != 'ACTIVE') {
       throw new ReappException(BackendErrorCodes.PENDING_AUTHORIZATION)
     }
-    const token = await this.generateJwtToken(user)
-    return { token, user }
+    const token = await this.generateJwtToken(user.id)
+    return { token }
   }
 
   async loginWithGoogle(loginGoogleDto: LoginGoogleDto) {
@@ -117,14 +78,14 @@ export class AuthService {
     const email = payload?.email
     const user = await this.prismaService.account.findFirst({
       where: { email },
-      select: authResponseFields,
+      select: { id: true },
     })
 
     if (!user) {
       throw new ReappException(BackendErrorCodes.USER_NOT_FOUND_ERROR)
     }
 
-    const token = await this.generateJwtToken(user)
-    return { token, user }
+    const token = await this.generateJwtToken(user.id)
+    return { token }
   }
 }
