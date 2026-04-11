@@ -19,6 +19,7 @@
     "db:generate": "prisma generate",
     "db:seed": "ts-node -r tsconfig-paths/register ./seeds/index.ts",
     "test": "vitest run",
+    "test:ci": "vitest run --reporter=dot ${VITEST_SHARD:+--shard=$VITEST_SHARD}",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:debug": "vitest --inspect-brk --inspect --no-file-parallelism",
