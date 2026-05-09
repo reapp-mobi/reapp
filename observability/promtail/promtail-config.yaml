@@ -15,13 +15,29 @@ scrape_configs:
       - host: unix:///var/run/docker.sock
         refresh_interval: 10s
     relabel_configs:
+      # Strip leading slash + Swarm task suffix (.<slot>.<task_id>) from container name.
       - source_labels: ['__meta_docker_container_name']
-        regex: '/(.*)'
+        regex: '/?([^.]+)(?:\.\d+\.[a-z0-9]+)?'
         target_label: 'container'
-      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+      # Service name: prefer Swarm label, fallback to Compose label, then container.
+      - source_labels: ['__meta_docker_container_label_com_docker_swarm_service_name']
         target_label: 'service'
-      - source_labels: ['__meta_docker_container_label_com_docker_compose_project']
-        target_label: 'project'
+      - source_labels: ['service', '__meta_docker_container_label_com_docker_compose_service']
+        regex: '^;(.+)$'
+        target_label: 'service'
+      - source_labels: ['service', 'container']
+        regex: '^;(.+)$'
+        target_label: 'service'
+      # Strip Dokploy stack prefix (e.g. dokploy-postgres -> postgres).
+      - source_labels: ['service']
+        regex: '^(?:dokploy-)?(.+)$'
+        target_label: 'service'
+      # Stack/project name.
+      - source_labels: ['__meta_docker_container_label_com_docker_stack_namespace']
+        target_label: 'stack'
+      - source_labels: ['stack', '__meta_docker_container_label_com_docker_compose_project']
+        regex: '^;(.+)$'
+        target_label: 'stack'
       - source_labels: ['__meta_docker_container_label_app']
         target_label: 'app'
       - source_labels: ['__meta_docker_container_label_env']
