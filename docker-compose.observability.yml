@@ -17,6 +17,8 @@ services:
       resources:
         limits:
           memory: 512M
+    networks:
+      - observability
 
   promtail:
     image: grafana/promtail:3.3.2
@@ -34,6 +36,8 @@ services:
       resources:
         limits:
           memory: 256M
+    networks:
+      - observability
 
   grafana:
     image: grafana/grafana:11.4.0
@@ -55,8 +59,15 @@ services:
       resources:
         limits:
           memory: 256M
+    networks:
+      - observability
 
 volumes:
   loki-data:
   promtail-positions:
   grafana-data:
+
+networks:
+  observability:
+    driver: overlay
+    attachable: true
