@@ -6,17 +6,21 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  Logger,
 } from '@nestjs/common'
-import { Response } from 'express'
+import { Request, Response } from 'express'
+import { PinoLogger } from 'nestjs-pino'
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  private readonly logger = new Logger(AllExceptionsFilter.name)
+  constructor(private readonly logger: PinoLogger) {
+    this.logger.setContext(AllExceptionsFilter.name)
+  }
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp()
     const response = ctx.getResponse<Response>()
+    const request = ctx.getRequest<Request & { id?: string }>()
+    const correlationId = request?.id
 
     if (exception instanceof ReappException) {
       return response
@@ -41,7 +45,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     // Transform unhandled errors into INTERNAL_SERVER_ERROR (ReappException)
-    this.logger.error(exception)
+    this.logger.error({ err: exception, correlationId }, 'Unhandled exception')
 
     const internalError = new ReappException(
       BackendErrorCodes.INTERNAL_SERVER_ERROR,

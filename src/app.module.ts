@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { BullModule } from '@nestjs/bull'
 import { Module } from '@nestjs/common'
 import { APP_FILTER, APP_GUARD } from '@nestjs/core'
@@ -47,15 +48,44 @@ import { ReportModule } from './modules/report/report.module'
           level: configService.isProduction ? 'info' : 'debug',
           base: {
             pid: false,
+            app: configService.APP_NAME,
+            env: configService.NODE_ENV,
           },
-          transport: {
-            target: 'pino-pretty',
-            options: {
-              colorize: true,
-              translateTime: 'HH:MM:ss Z',
-              ignore: 'pid,hostname',
-            },
+          // Accept incoming x-correlation-id (e.g. propagated from frontend or
+          // upstream proxy); generate a UUID otherwise. Echo it back on the
+          // response so clients can quote it when reporting issues.
+          genReqId: (req, res) => {
+            const incoming =
+              (req.headers['x-correlation-id'] as string | undefined) ||
+              (req.headers['x-request-id'] as string | undefined)
+            const id = incoming && incoming.length > 0 ? incoming : randomUUID()
+            res.setHeader('x-correlation-id', id)
+            return id
           },
+          customProps: (req) => ({
+            correlationId: (req as { id?: string }).id,
+          }),
+          serializers: {
+            req: (req) => ({
+              id: req.id,
+              method: req.method,
+              url: req.url,
+            }),
+            res: (res) => ({
+              statusCode: res.statusCode,
+            }),
+          },
+          transport: configService.isProduction
+            ? undefined
+            : {
+                target: 'pino-pretty',
+                options: {
+                  colorize: true,
+                  translateTime: 'HH:MM:ss Z',
+                  ignore: 'pid,hostname',
+                  messageFormat: '[{correlationId}] {msg}',
+                },
+              },
         },
       }),
     }),
