@@ -34,6 +34,11 @@ scrape_configs:
     pipeline_stages:
       # Unwrap Docker JSON wrapper -> actual log line in `output`.
       - docker: {}
+      # Skip backfill of pre-stack logs (Loki rejects entries older than
+      # `reject_old_samples_max_age: 168h` with HTTP 400).
+      - drop:
+          older_than: 168h
+          drop_counter_reason: too_old_for_loki
       # App log line itself is JSON (pino). Extract fields without
       # promoting high-cardinality ones (correlationId stays a field).
       - json:

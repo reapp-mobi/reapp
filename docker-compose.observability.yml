@@ -3,7 +3,7 @@ services:
     image: grafana/loki:3.3.2
     command: -config.file=/etc/loki/loki-config.yaml
     volumes:
-      - ./observability/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - ../files/etc/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
       - loki-data:/loki
     # Loki not exposed publicly: Promtail + Grafana reach it via stack network.
     healthcheck:
@@ -22,7 +22,7 @@ services:
     image: grafana/promtail:3.3.2
     command: -config.file=/etc/promtail/promtail-config.yaml
     volumes:
-      - ./observability/promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
+      - ../files/etc/promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - promtail-positions:/tmp
@@ -44,7 +44,8 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "false"
       GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3001}
     volumes:
-      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../files/etc/grafana/provisioning/datasources/loki.yaml:/etc/grafana/provisioning/datasources/loki.yaml:ro
+      - ../files/etc/grafana/provisioning/dashboards/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
       - grafana-data:/var/lib/grafana
     ports:
       - "3001:3000"
