@@ -27,6 +27,8 @@ export enum BackendErrorCodes {
   CANNOT_BLOCK_SELF = 'CANNOT_BLOCK_SELF',
   USER_ALREADY_BLOCKED = 'USER_ALREADY_BLOCKED',
   USER_NOT_BLOCKED = 'USER_NOT_BLOCKED',
+
+  REPORT_NOT_FOUND_ERROR = 'REPORT_NOT_FOUND_ERROR',
 }
 
 const GenericErrors = {
@@ -141,10 +143,19 @@ const BlockErrors = {
   },
 }
 
+const ReportErrors = {
+  [BackendErrorCodes.REPORT_NOT_FOUND_ERROR]: {
+    status: 404,
+    description: 'Denúncia não encontrada',
+    data: ['id'],
+  },
+}
+
 export const BackendErrors = {
   ...GenericErrors,
   ...AuthErrors,
   ...ZodErrors,
   ...AccountErrors,
   ...BlockErrors,
+  ...ReportErrors,
 } as const
