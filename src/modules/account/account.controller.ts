@@ -92,6 +92,12 @@ export class AccountController {
   }
 
   @UseGuards(AuthGuard)
+  @Get('me')
+  findMe(@Req() request: Request) {
+    return this.accountService.findOne(request.user.id)
+  }
+
+  @UseGuards(AuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.accountService.findOne(+id)
