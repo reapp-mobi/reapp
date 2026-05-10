@@ -127,6 +127,23 @@ describe('AccountController', () => {
     })
   })
 
+  describe('findMe', () => {
+    it('should return the authenticated account', async () => {
+      const account = {
+        id: 1,
+        email: 'user@test.com',
+        name: 'Donor Test',
+        accountType: 'DONOR',
+      }
+      ;(accountService.findOne as Mock).mockResolvedValue(account)
+
+      const request = getRequest()
+      const result = await controller.findMe(request)
+      expect(accountService.findOne).toHaveBeenCalledWith(request.user.id)
+      expect(result).toEqual(account)
+    })
+  })
+
   describe('findOne', () => {
     it('should return one account by id', async () => {
       const account = {
