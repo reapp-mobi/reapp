@@ -25,9 +25,11 @@ RUN pnpm prisma generate && pnpm build && pnpm prune --production --ignore-scrip
 
 FROM base AS runner
 
+ARG APP_ENV=production
+
 LABEL logging=promtail
 LABEL app=reapp-back
-LABEL env=production
+LABEL env=${APP_ENV}
 
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/dist ./dist
