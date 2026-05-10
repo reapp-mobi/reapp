@@ -42,6 +42,11 @@ scrape_configs:
         target_label: 'app'
       - source_labels: ['__meta_docker_container_label_env']
         target_label: 'env'
+      # Suffix service with env for our app so staging/prod logs split.
+      - source_labels: ['app', 'env']
+        regex: 'reapp-back;(.+)'
+        target_label: 'service'
+        replacement: 'reapp-back-${1}'
     pipeline_stages:
       # Unwrap Docker JSON wrapper -> actual log line in `output`.
       - docker: {}
