@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { Prisma, Report } from '@prisma/client'
 import { PrismaService } from '../../database/prisma.service'
 import { IApiResponse } from '../../types/api-response'
+import { BackendErrorCodes } from '../../types/errors'
 import { PaginatedResponse } from '../../types/paginated.response'
+import { ReappException } from '../../utils/error.utils'
 import { CreateReportData } from './dto/create-report.dto'
 import { ListReportQuery } from './dto/list-report.dto'
 import { UpdateReportData } from './dto/update-report.dto'
@@ -81,7 +83,7 @@ export class ReportService {
     })
 
     if (!report) {
-      throw new NotFoundException('Denúncia não encontrada.')
+      throw new ReappException(BackendErrorCodes.REPORT_NOT_FOUND_ERROR, { id })
     }
 
     return {
@@ -97,7 +99,7 @@ export class ReportService {
   ): Promise<IApiResponse<Report>> {
     const exists = await this.prismaService.report.findUnique({ where: { id } })
     if (!exists) {
-      throw new NotFoundException('Denúncia não encontrada.')
+      throw new ReappException(BackendErrorCodes.REPORT_NOT_FOUND_ERROR, { id })
     }
 
     const report = await this.prismaService.report.update({
